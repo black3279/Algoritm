@@ -2,85 +2,20 @@
 #include <stdio.h>
 #include <string.h>
 #define INF 0x7fff0000
-
-typedef struct{
+typedef struct {
 	int y;
 	int x;
-	int flag;
 }location;
 
 int my, mx;
-int map[6][10];
-int init[6][10];
-int pin_num;
 
-int min_cnt;
-int min_move;
-
-location pin[9];
+char temp[60][60];
+int map[60][60];
+int temp_visit[60][60];
 int dx[] = { 0, 1, 0, -1 };
 int dy[] = { -1, 0, 1, 0 };
+int min;
 
-
-void input(void)
-{
-	int i, j;
-	char temp;
-
-	for (i = 1; i <= my; i++)
-	{
-		for (j = 1; j <= mx; j++)
-		{
-			scanf(" %c", &temp);
-			if (temp == '#') map[i][j] = 9;
-			if (temp == '.') map[i][j] = 0;
-			if (temp == 'o')
-			{
-				pin[pin_num].y = i;
-				pin[pin_num].x = j;
-				map[i][j] = pin_num;
-				pin_num++;
-			}
-		}
-	}
-
-	pin_num--;
-}
-
-int check_final(void)
-{
-	int i, j;
-	int nx, ny;
-	int nnx, nny;
-	int sx, sy;
-	int cnt = 0;
-
-	for (i = 1; i <= pin_num; i++)
-	{
-		sx = pin[i].x;
-		sy = pin[i].y;
-
-		if (pin[i].flag == 0)
-		{
-			for (j = 0; j<4; j++)
-			{
-				nx = sx + dx[j];
-				ny = sy + dy[j];
-
-				nnx = nx + dx[j];
-				nny = ny + dy[j];
-
-				if (map[ny][nx]>0 && map[ny][nx]<9)
-				{
-					if (nnx<1 || nnx>mx || nny<1 || nny>my) continue;
-					return 0;
-				}
-			}
-		}
-	}
-
-	return 1;
-}
 
 void P(void)
 {
@@ -97,50 +32,155 @@ void P(void)
 	printf("\n");
 }
 
-void DFS(int L, int cnt)
+void dot(int y, int x, int num)
 {
 	int i, j;
-	int nx, ny, sx, sy;
-	int nnx, nny;
-	int delete_idx;
-	int backup[6][10];
-	if (cnt<min_cnt)
+	int nx, ny;
+	int wp, rp;
+	location out;
+	location que[3000] = { 0, };
+	wp = rp = 0;
+
+	que[wp].y = y;
+	que[wp++].x = x;
+	temp_visit[y][x] = 1;
+	map[y][x] = num;
+	while (wp > rp)
 	{
-		//P();
-		min_cnt = cnt;
-		min_move = pin_num - min_cnt;
+		out = que[rp++];
+
+		for (i = 0; i < 4; i++)
+		{
+			nx = out.x + dx[i];
+			ny = out.y + dy[i];
+			if (nx<1 || ny<1 || nx>mx || ny>my) continue;
+
+			if (temp_visit[ny][nx] == 0 && temp[ny][nx] == 'X')
+			{
+				que[wp].y = ny;
+				que[wp++].x = nx;
+				temp_visit[ny][nx] = 1;
+				map[ny][nx] = num;
+			}
+		}
+	}
+}
+
+void init(void)
+{
+	int i, j;
+	int num = 1;
+	for (i = 1; i <= my; i++)
+	{
+		for (j = 1; j <= mx; j++)
+		{
+			if (temp_visit[i][j] == 0 && temp[i][j] == 'X')
+			{
+				dot(i, j, num);
+				num++;
+			}
+		}
+	}
+}
+
+
+void input(void)
+{
+	int i, j;
+	scanf("%d %d", &my, &mx);
+
+	for (i = 1; i <= my; i++)
+	{
+		for (j = 1; j <= mx; j++)
+		{
+			scanf(" %c", &temp[i][j]);
+		}
+	}
+}
+
+
+
+int BFS(int sy, int sx)
+{
+	int i, j;
+	int di, dj;
+	int nx, ny;
+	int wp, rp;
+	int visit[60][60] = { 0, };
+	location out;
+	location que[3000] = { 0, };
+
+	wp = rp = 0;
+
+	que[wp].y = sy;
+	que[wp++].x = sx;
+	visit[sy][sx] = 0;
+
+	while (wp > rp)
+	{
+		out = que[rp++];
+
+		for (i = 0; i < 4; i++)
+		{
+			nx = out.x + dx[i];
+			ny = out.y + dy[i];
+
+			if (nx<1 || ny<1 || nx>mx || ny>my) continue;
+
+			if (map[ny][nx] == 2)
+			{
+				/*if (visit[out.y][out.x] == 2)
+				{
+				printf("visit = %d\n", visit[out.y][out.x]);
+				for (di = 1; di <= my; di++)
+				{
+				for (dj = 1; dj <= mx; dj++)
+				{
+				visit[que[0].y][que[0].x] = 9;
+				printf("%d ", visit[di][dj]);
+				}
+				printf("\n");
+				}
+				printf("\n");
+				}*/
+				return visit[out.y][out.x];
+			}
+
+			if (map[ny][nx] == 0 && visit[ny][nx] == 0)
+			{
+				que[wp].y = ny;
+				que[wp++].x = nx;
+				visit[ny][nx] = visit[out.y][out.x] + 1;
+			}
+		}
 	}
 
-	for (i = 1; i <= pin_num; i++)
-	{
-		if (pin[i].flag == 0)
-		{
-			sx = pin[i].x;
-			sy = pin[i].y;
-			for (j = 0; j<4; j++)
-			{
-				nx = sx + dx[j];
-				ny = sy + dy[j];
+	return INF;
+}
 
-				nnx = nx + dx[j];
-				nny = ny + dy[j];
-				if (nnx<1 || nny<1 || nnx>mx || nny>my) continue;
-				if (map[ny][nx] != 0 && map[ny][nx] != 9 && map[nny][nnx] == 0)
+
+void BFS_all(void)
+{
+	int i, j, k, nx, ny;
+	int num;
+	for (i = 1; i <= my; i++)
+	{
+		for (j = 1; j <= mx; j++)
+		{
+			if (map[i][j] == 1)
+			{
+				for (k = 0; k < 4; k++)
 				{
-					delete_idx = map[ny][nx];
-					map[ny][nx] = 0;
-					map[nny][nnx] = i;
-					map[sy][sx] = 0;
-					pin[i].y = nny;
-					pin[i].x = nnx;
-					pin[delete_idx].flag = 1;
-					DFS(L + 1, cnt - 1);
-					pin[i].y = sy;
-					pin[i].x = sx;
-					map[nny][nnx] = 0;
-					map[sy][sx] = i;
-					map[ny][nx] = delete_idx;
-					pin[delete_idx].flag = 0;
+					ny = i + dy[k];
+					nx = j + dx[k];
+					if (ny<1 || nx<1 || ny>my || nx>mx) continue;
+					if (map[ny][nx] == 0)
+					{
+						num = BFS(i, j);
+
+						if (num < min) min = num;
+						break;
+					}
 				}
 			}
 		}
@@ -150,26 +190,20 @@ void DFS(int L, int cnt)
 
 int main(void)
 {
-	int T, tc;
-	scanf("%d", &T);
-	my = 5;
-	mx = 9;
-	for (tc = 1; tc <= T; tc++)
-	{
-		pin_num = 1;
-		memset(pin, 0, sizeof(pin));
-		input();
-		//P();
-		min_cnt = pin_num;
-		min_move = 0;
-		DFS(0, pin_num);
+	input();
 
-		printf("%d %d\n", min_cnt, min_move);
+	init();
 
-	}
+	//P();
+
+	min = INF;
+
+	BFS_all();
+
+	printf("%d", min);
+
 	return 0;
 }
-
 
 #endif
 
