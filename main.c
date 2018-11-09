@@ -1,48 +1,60 @@
 #if 01
-
 #include <stdio.h>
+#define INF 0x7fff0000
+int N, cost[13][13];
+int min;
+int visit[13];
 
-int main(void)
-
+void DFS(int L, int start, int sum)
 {
-	int mo, ja;
 	int i;
-	int n;
-
-	int clear[30000][2] = { 0, };
-
-
-	scanf("%d", &n);
-
-	printf("0/1\n");
-
-	for (mo = 2; mo <= n; mo++)
+	if (sum >= min) return;
+	if (L == N)
 	{
-		for (ja = 1; ja <= mo - 1; ja++)
-		{
-			if ((clear[(30000 * ja) / mo][0] == 0))
-			{
-				clear[(30000 * ja) / mo][0] = ja;
-				clear[(30000 * ja) / mo][1] = mo;
-			}
-		}
+		if (cost[start][1] == 0) return;
+		if (sum + cost[start][1] < min) min = sum + cost[start][1];
+		return;
 	}
 
-	for (i = 0; i<30000; i++)
+	for (i = 2; i <= N; i++)
 	{
-		if (clear[i][0] != 0)
+		if (visit[i] == 0 && cost[start][i]>0)
 		{
-			printf("%d/%d\n", clear[i][0], clear[i][1]);
+			visit[i] = 1;
+			DFS(L + 1, i, sum + cost[start][i]);
+			visit[i] = 0;
 		}
 	}
-
-
-	printf("1/1");
-
-	// 여기서부터 작성
-
-	return 0;
 
 }
 
+
+void input(void)
+{
+	int i, j;
+	scanf("%d", &N);
+
+	for (i = 1; i <= N; i++)
+	{
+		for (j = 1; j <= N; j++)
+		{
+			scanf("%d", &cost[i][j]);
+		}
+	}
+}
+
+
+int main(void)
+{
+	input();
+	min = INF;
+	visit[1] = 1;
+	DFS(1, 1, 0);
+
+	if (min != INF)printf("%d\n", min);
+	else printf("0\n");
+	return 0;
+}
 #endif
+
+
