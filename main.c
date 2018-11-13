@@ -5,77 +5,68 @@
 typedef struct {
 	int y;
 	int x;
-	int dir;
+	int dir; // dir 은 0이 가로 1이 세로
 }info;
-int my, mx;
-int visit[5][110][110];
-int map[110][110];
-int dy[] = { 0, 0, 0, 1, -1 };
-int dx[] = { 0, 1, -1, 0, 0 };
-int right[] = { 0, 3, 4, 2, 1 };
-int left[] = { 0, 4, 3, 1, 2 };
+
+info que[1000000];
+
 info start;
-info end;
-info que[101000];
+info end; // 큐도 만들기
+int N;
+char map[60][60];
+int visit[2][60][60];
 int wp, rp;
+
+int dx[] = { 0, 1, 0, -1 };
+int dy[] = { -1, 0, 1, 0 };
+
+void map_P(void)
+{
+	int i, j;
+	for (i = 1; i <= N; i++)
+	{
+		for (j = 1; j <= N; j++)
+		{
+			printf("%c ", map[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+
+}
 
 void P(void)
 {
 	int i, j;
 
-	printf("sy= %d, sx= %d, sdir= %d, / ey= %d, ex= %d, edir= %d\n", start.y, start.x, start.dir, end.y, end.x, end.dir);
+	printf("visit[0]\n");
+	for (i = 1; i <= N; i++)
+	{
+		for (j = 1; j <= N; j++)
+		{
+			printf("%2d ", visit[0][i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
 
 	printf("visit[1]\n");
-	for (i = 1; i <= my; i++)
+	for (i = 1; i <= N; i++)
 	{
-		for (j = 1; j <= mx; j++)
+		for (j = 1; j <= N; j++)
 		{
-			printf("%d ", visit[1][i][j]);
+			printf("%2d ", visit[1][i][j]);
 		}
 		printf("\n");
 	}
 	printf("\n");
 
-	printf("visit[2]\n");
-	for (i = 1; i <= my; i++)
-	{
-		for (j = 1; j <= mx; j++)
-		{
-			printf("%d ", visit[2][i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-
-	printf("visit[3]\n");
-	for (i = 1; i <= my; i++)
-	{
-		for (j = 1; j <= mx; j++)
-		{
-			printf("%d ", visit[3][i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-
-	printf("visit[4]\n");
-	for (i = 1; i <= my; i++)
-	{
-		for (j = 1; j <= mx; j++)
-		{
-			printf("%d ", visit[4][i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
 }
 
 int BFS(void)
 {
-	int i, nx, nnx, nnnx, ny, nny, nnny;
-	int dir, sx, sy;
 	info out;
-
+	int nx, ny, i, direc;
 	wp = rp = 0;
 
 	que[wp].y = start.y;
@@ -83,72 +74,49 @@ int BFS(void)
 	que[wp++].dir = start.dir;
 	visit[start.dir][start.y][start.x] = 1;
 
-	if (end.y == start.y && end.x == start.x && end.dir == start.dir) return 0;
 
-	while (wp>rp)
+	while (wp > rp)
 	{
 		out = que[rp++];
-		sy = out.y, sx = out.x, dir = out.dir;
+		direc = out.dir;
+		if (out.x == end.x && out.y == end.y && direc == end.dir) return visit[out.dir][out.y][out.x] - 1;
 
-		if (left[dir] == end.dir && sy == end.y && sx == end.x) return visit[dir][sy][sx];
-		if (right[dir] == end.dir && sy == end.y && sx == end.x) return visit[dir][sy][sx];
-
-		if (visit[left[dir]][sy][sx] == 0)
+		for (i = 0; i < 4; i++)
 		{
-			que[wp].y = sy;
-			que[wp].x = sx;
-			que[wp++].dir = left[dir];
-			visit[left[dir]][sy][sx] = visit[dir][sy][sx] + 1;
+			nx = out.x + dx[i];
+			ny = out.y + dy[i];
+
+			if (nx<1 || nx>N || ny<1 || ny>N) continue;
+
+			if (nx == end.x && ny == end.y && direc == end.dir) return visit[out.dir][out.y][out.x];
+
+			if (direc == 0 && check_0(ny, nx, i) == 1)
+			{
+				if (visit[0][ny][nx] == 0)
+				{
+					visit[0][ny][nx] = visit[0][out.y][out.x] + 1;
+					que[wp].y = ny;
+					que[wp].x = nx;
+					que[wp++].dir = direc;
+				}
+			}
+			if (direc == 1 && check_1(ny, nx, i) == 1)
+			{
+				if (visit[1][ny][nx] == 0)
+				{
+					visit[1][ny][nx] = visit[1][out.y][out.x] + 1;
+					que[wp].y = ny;
+					que[wp].x = nx;
+					que[wp++].dir = direc;
+				}
+			}
 		}
-		if (visit[right[dir]][sy][sx] == 0)
+		if (rotate(out.y, out.x) == 1 && visit[!out.dir][out.y][out.x] == 0)
 		{
-			que[wp].y = sy;
-			que[wp].x = sx;
-			que[wp++].dir = right[dir];
-			visit[right[dir]][sy][sx] = visit[dir][sy][sx] + 1;
-		}
-
-
-		nx = sx + dx[dir];
-		ny = sy + dy[dir];
-		if (nx<1 || ny<1 || nx>mx || ny>my) continue;
-		if (map[ny][nx] == 1) continue;
-
-		if (ny == end.y && nx == end.x && dir == end.dir) return visit[dir][sy][sx];
-		if (map[ny][nx] == 0 && visit[dir][ny][nx] == 0)
-		{
-			que[wp].y = ny;
-			que[wp].x = nx;
-			que[wp++].dir = dir;
-			visit[dir][ny][nx] = visit[dir][sy][sx] + 1;
-		}
-
-		nnx = nx + dx[dir];
-		nny = ny + dy[dir];
-		if (nnx<1 || nny<1 || nnx>mx || nny>my) continue;
-		if (map[nny][nnx] == 1) continue;
-
-		if (nny == end.y && nnx == end.x && dir == end.dir) return visit[dir][sy][sx];
-		if (map[nny][nnx] == 0 && visit[dir][nny][nnx] == 0)
-		{
-			que[wp].y = nny;
-			que[wp].x = nnx;
-			que[wp++].dir = dir;
-			visit[dir][nny][nnx] = visit[dir][sy][sx] + 1;
-		}
-
-		nnnx = nnx + dx[dir];
-		nnny = nny + dy[dir];
-		if (nnnx<1 || nnny<1 || nnnx>mx || nnny>my) continue;
-		if (map[nnny][nnnx] == 1) continue;
-
-		if (nnny == end.y && nnnx == end.x && dir == end.dir) return visit[dir][sy][sx];
-		if (map[nnny][nnnx] == 0 && visit[dir][nnny][nnnx] == 0)
-		{
-			que[wp].y = nnny;
-			que[wp].x = nnnx;
-			que[wp++].dir = dir;
-			visit[dir][nnny][nnnx] = visit[dir][sy][sx] + 1;
+			visit[!out.dir][out.y][out.x] = visit[out.dir][out.y][out.x] + 1;
+			que[wp].y = out.y;
+			que[wp].x = out.x;
+			que[wp++].dir = !out.dir;
 		}
 	}
 
@@ -158,23 +126,124 @@ int BFS(void)
 }
 
 
-void input(void)
+int rotate(int y, int x)
 {
 	int i, j;
+	int sx, sy, ex, ey;
 
-	scanf("%d %d", &my, &mx);
+	sy = y - 1;
+	sx = x - 1;
+	ey = y + 1;
+	ex = x + 1;
+	if (sy<1 || sx<1 || ey>N || ex>N) return 0;
 
-	for (i = 1; i <= my; i++)
+	for (i = sy; i <= ey; i++)
 	{
-		for (j = 1; j <= mx; j++)
+		for (j = sx; j <= ex; j++)
 		{
-			scanf("%d", &map[i][j]);
+			if (map[i][j] == '1') return 0;
 		}
 	}
 
-	scanf("%d %d %d", &start.y, &start.x, &start.dir);
+	return 1;
+}
 
-	scanf("%d %d %d", &end.y, &end.x, &end.dir);
+int check_1(int y, int x, int dir)// _0은 현재 방향이 0일때
+{
+	int i, j, nx, ny;
+	nx = x + dx[dir];
+	ny = y + dy[dir];
+
+	if (dir == 1 || dir == 3)
+	{
+		if (map[y][x] == '0' && map[y - 1][x] == '0' && map[y + 1][x] == '0') return 1;
+		else return 0;
+	}
+
+	if (nx<1 || nx>N || ny<1 || ny>N) return;
+
+	if (dir == 0 || dir == 2)
+	{
+		if (map[ny][nx] == '0') return 1;
+		else return 0;
+	}
+}
+
+//dir은 내가 가려는 방향.
+int check_0(int y, int x, int dir)// _0은 현재 방향이 0일때
+{
+	int i, j, nx, ny;
+	nx = x + dx[dir];
+	ny = y + dy[dir];
+
+	if (dir == 0 || dir == 2)
+	{
+		if (map[y][x] == '0' && map[y][x - 1] == '0' && map[y][x + 1] == '0') return 1;
+		else return 0;
+	}
+
+	if (nx<1 || nx>N || ny<1 || ny>N) return;
+
+	if (dir == 1 || dir == 3)
+	{
+		if (map[ny][nx] == '0') return 1;
+		else return 0;
+	}
+}
+
+void input(void)
+{
+	int i, j;
+	int sflag = 0, eflag = 0;
+	scanf("%d", &N);
+
+	for (i = 1; i <= N; i++)
+	{
+		for (j = 1; j <= N; j++)
+		{
+			scanf(" %c", &map[i][j]);
+
+			if (map[i][j] == 'B' && sflag == 2) map[i][j] = '0';
+			if (map[i][j] == 'B' && sflag == 1)
+			{
+				start.y = i;
+				start.x = j;
+				sflag++;
+				if (map[i][j - 1] == 'B')
+				{
+					start.dir = 0;
+					map[i][j - 1] = '0';
+				}
+				if (map[i - 1][j] == 'B')
+				{
+					start.dir = 1;
+					map[i - 1][j] = '0';
+				}
+				map[i][j] = '0';
+			}
+			if (map[i][j] == 'B' && sflag == 0) sflag++;
+
+			if (map[i][j] == 'E' && eflag == 2) map[i][j] = '0';
+			if (map[i][j] == 'E' && eflag == 1)
+			{
+				end.y = i;
+				end.x = j;
+				eflag++;
+				if (map[i][j - 1] == 'E')
+				{
+					end.dir = 0;
+					map[i][j - 1] = '0';
+				}
+				if (map[i - 1][j] == 'E')
+				{
+					end.dir = 1;
+					map[i - 1][j] = '0';
+				}
+				map[i][j] = '0';
+			}
+			if (map[i][j] == 'E' && eflag == 0) eflag++;
+		}
+	}
 }
 
 
@@ -186,14 +255,17 @@ int main(void)
 
 	sol = BFS();
 
+	//printf("ey = %d, ex = %d, edir = %d\n", end.y, end.x, end.dir);
+
 	//P();
 
-	printf("%d", sol);
+	//map_P();
 
+	if (sol > 0) printf("%d", sol);
+	else printf("0");
 
 	return 0;
 }
-
 
 
 #endif
