@@ -1,163 +1,301 @@
 #if 01
 #include <stdio.h>
 #include <string.h>
-
-struct {
-	int y;
-	int x;
-	int direc;
-	int len;
-}snake;
-
-typedef struct {
-	int map;
-	int direc;
-}info;
-
-struct {
-	int time;
-	char LD;
-}cmd[110];
-
-info map[110][110];
 int N;
-int K;
-int L;
-int d_cnt;
 int dx[] = { 0, 1, 0, -1 };
 int dy[] = { -1, 0, 1, 0 };
-int left[] = { 3, 0, 1, 2 };
-int right[] = { 1, 2, 3, 0 };
-int you[] = { 2, 3, 0, 1 };
+int map[25][25];
+int init_map[25][25];
+int dir[6];
+int max;
+int cnt;
 
-void map_P(void)
+void P(void)
 {
 	int i, j;
+
 	for (i = 1; i <= N; i++)
 	{
 		for (j = 1; j <= N; j++)
 		{
-			printf("%d ", map[i][j].map);
+			printf("%d ", map[i][j]);
 		}
 		printf("\n");
 	}
 	printf("\n");
 }
 
-void direc_P(void)
+void Move(int direc)
 {
-	int i, j;
-	for (i = 1; i <= N; i++)
+	int i, j, ny, nx, sx, sy;
+	int num;
+	int visit[25][25] = { 0, };
+
+	if (direc == 0)
 	{
-		for (j = 1; j <= N; j++)
+		for (i = 2; i <= N; i++)
 		{
-			printf("%d ", map[i][j].direc);
+			for (j = 1; j <= N; j++)
+			{
+				if (map[i][j])
+				{
+
+					num = map[i][j];
+					ny = i;
+					nx = j;
+					for (;;)
+					{
+						sy = ny;
+						sx = nx;
+						nx = sx + dx[direc];
+						ny = sy + dy[direc];
+
+						if (ny == 1 && map[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							map[ny][nx] = num;
+
+							break;
+						}
+
+						if (map[ny][nx] == 0) continue;
+
+						if (map[ny][nx] != num || (map[ny][nx] == num && visit[ny][nx] == 1))
+						{
+							map[i][j] = 0;
+							map[sy][sx] = num;
+
+							break;
+						}
+
+						if (map[ny][nx] == num && visit[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							visit[ny][nx] = 1;
+							map[ny][nx] = 2 * map[ny][nx];
+							if (2 * num > max) max = 2 * num;
+							break;
+						}
+
+					}
+				}
+			}
 		}
-		printf("\n");
 	}
-	printf("\n");
-}
 
-void move_apple(int y, int x)
-{
-	map[y][x].map = 1;
-	map[y][x].direc = snake.direc;
-	snake.y = y;
-	snake.x = x;
-	snake.len++;
-	return;
-}
-
-void move_none(int y, int x, int tk)
-{
-	int i, j, nx, ny, sx, sy;
-	info nul = { 0, };
-	int len;
-
-	map[y][x].map = 1;
-	map[y][x].direc = snake.direc;
-	snake.y = y;
-	snake.x = x;
-	len = snake.len;
-	nx = x;
-	ny = y;
-	//printf("move none = %d  len = %d\n", tk, len);
-	for (i = len; i >= 1; i--)
+	if (direc == 1)
 	{
-		sx = nx, sy = ny;
-		//printf("sy = %d, sx = %d\n", sy, sx);
-		nx = nx + dx[you[map[sy][sx].direc]];
-		ny = ny + dy[you[map[sy][sx].direc]];
-		//printf("ny = %d, nx = %d\n", ny, nx);
-	}
-	//printf("final ny = %d, nx = %d\n", ny, nx);
-	map[ny][nx] = nul;
-
-}
-
-int time_start(void)
-{
-	int tk = 1;
-	int nx, ny;
-	//printf("0\n");
-	//map_P();
-	//direc_P();
-	for (;;)
-	{
-		nx = snake.x + dx[snake.direc];
-		ny = snake.y + dy[snake.direc];
-
-		if (map[ny][nx].map == 1 || nx > N || ny > N || nx < 1 || ny < 1) return tk;
-		if (map[ny][nx].map == 7) move_apple(ny, nx);
-		else if (map[ny][nx].map == 0) move_none(ny, nx, tk);
-
-		if (d_cnt <= L && tk == cmd[d_cnt].time)
+		for (j = N - 1; j >= 1; j--)
 		{
-			if (cmd[d_cnt].LD == 'D') snake.direc = right[snake.direc];
-			if (cmd[d_cnt].LD == 'L') snake.direc = left[snake.direc];
-			d_cnt++;
+			for (i = 1; i <= N; i++)
+			{
+				if (map[i][j] != 0)
+				{
+					num = map[i][j];
+					ny = i;
+					nx = j;
+					for (;;)
+					{
+						sy = ny;
+						sx = nx;
+						nx = nx + dx[direc];
+						ny = ny + dy[direc];
+						if (nx == N && map[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							map[ny][nx] = num;
+							break;
+						}
+
+						if (map[ny][nx] == 0) continue;
+
+						if (map[ny][nx] != num || (map[ny][nx] == num && visit[ny][nx] == 1))
+						{
+							map[i][j] = 0;
+							map[sy][sx] = num;
+							break;
+						}
+
+
+						if (map[ny][nx] == num && visit[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							visit[ny][nx] = 1;
+							map[ny][nx] = 2 * map[ny][nx];
+							if (2 * num > max) max = 2 * num;
+							break;
+						}
+
+					}
+				}
+			}
 		}
-		//printf("%d\n", tk);
-		//map_P();
-		//direc_P();
-		tk++;
 	}
+
+	if (direc == 2)
+	{
+		for (i = N - 1; i >= 1; i--)
+		{
+			for (j = 1; j <= N; j++)
+			{
+				if (map[i][j])
+				{
+					num = map[i][j];
+					ny = i;
+					nx = j;
+					for (;;)
+					{
+						sy = ny;
+						sx = nx;
+						nx = sx + dx[direc];
+						ny = sy + dy[direc];
+
+						if (ny == N && map[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							map[ny][nx] = num;
+
+							break;
+						}
+
+						if (map[ny][nx] == 0) continue;
+
+						if (map[ny][nx] != num || (map[ny][nx] == num && visit[ny][nx] == 1))
+						{
+							map[i][j] = 0;
+							map[sy][sx] = num;
+
+							break;
+						}
+
+
+						if (map[ny][nx] == num && visit[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							visit[ny][nx] = 1;
+							map[ny][nx] = 2 * map[ny][nx];
+							if (2 * num > max) max = 2 * num;
+							break;
+						}
+
+					}
+				}
+			}
+		}
+	}
+
+	if (direc == 3)
+	{
+		for (j = 2; j <= N; j++)
+		{
+			for (i = 1; i <= N; i++)
+			{
+				if (map[i][j])
+				{
+					num = map[i][j];
+					ny = i;
+					nx = j;
+					for (;;)
+					{
+
+						sy = ny;
+						sx = nx;
+						nx = sx + dx[direc];
+						ny = sy + dy[direc];
+
+						if (nx == 1 && map[ny][nx] == 0)
+						{
+							map[i][j] = 0;
+							map[ny][nx] = num;
+
+							break;
+						}
+
+
+						if (map[ny][nx] == 0) continue;
+
+						if (map[ny][nx] != num || (map[ny][nx] == num && visit[ny][nx] == 1))
+						{
+							map[i][j] = 0;
+							map[sy][sx] = num;
+
+							break;
+						}
+
+						if (map[ny][nx] == num && visit[ny][nx] == 0)
+						{
+							visit[ny][nx] = 1;
+							map[i][j] = 0;
+							map[ny][nx] = 2 * map[ny][nx];
+							if (2 * num > max) max = 2 * num;
+
+							break;
+						}
+
+					}
+				}
+			}
+		}
+	}
+}
+
+
+void DFS(int L)
+{
+	int i;
+	if (L == 6)
+	{
+		memcpy(map, init_map, sizeof(map));
+		for (i = 1; i <= 5; i++)
+		{
+			Move(dir[i]);
+		}
+		return;
+	}
+
+	for (i = 0; i < 4; i++)
+	{
+		dir[L] = i;
+		DFS(L + 1);
+	}
+
 }
 
 void input(void)
 {
 	int i, j;
-	int x, y;
-	snake.y = 1, snake.x = 1, snake.direc = 1, snake.len = 1;
-	d_cnt = 1;
 	scanf("%d", &N);
-	scanf("%d", &K);
-	for (i = 1; i <= K; i++)
-	{
-		scanf("%d %d", &y, &x);
-		map[y][x].map = 7;
-	}
-	scanf("%d", &L);
 
-	for (i = 1; i <= L; i++)
+	for (i = 1; i <= N; i++)
 	{
-		scanf("%d %c", &cmd[i].time, &cmd[i].LD);
+		for (j = 1; j <= N; j++)
+		{
+			scanf("%d", &init_map[i][j]);
+			if (init_map[i][j] > max) max = init_map[i][j];
+		}
 	}
-
-	map[1][1].map = 1;
-	map[1][1].direc = 1;
 }
+
+
 
 int main(void)
 {
-	int sol;
+	max = -1;
 	input();
 
-	sol = time_start();
-
-	printf("%d", sol);
+	DFS(1);
+	/*memcpy(map, init_map, sizeof(map));
+	P();
+	Move(2);
+	P();
+	Move(2);
+	P();
+	Move(3);
+	P();*/
+	printf("%d", max);
 
 	return 0;
 }
+
 
 #endif
